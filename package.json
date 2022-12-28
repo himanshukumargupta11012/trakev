@@ -6,6 +6,32 @@
     "hbs": "^4.2.0",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.8.1",
+    "nodemailer": "^6.8.0",
     "nodemon": "^2.0.20"
+  },
+  "name": "ev",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon app.js",
+    "tailwind:css": "postcss input.css -o output.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/himanshukumargupta11012/trakev.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/himanshukumargupta11012/trakev/issues"
+  },
+  "homepage": "https://github.com/himanshukumargupta11012/trakev#readme",
+  "description": "",
+  "devDependencies": {
+    "autoprefixer": "^10.4.13",
+    "postcss": "^8.4.20",
+    "tailwindcss": "^3.2.4"
   }
 }

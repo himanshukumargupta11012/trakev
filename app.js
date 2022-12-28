@@ -5,15 +5,16 @@ const jwt = require("jsonwebtoken")
 const hbs = require("hbs")
 const bcrypt = require("bcrypt")
 const copar = require("cookie-parser")
+const mailer = require("nodemailer")
 
-require("./db")
+require("./key")
 
 const app = express();
 const port = process.env.PORT || 3008;
 
-const Signin = require("./data_user.js")
-const Booking = require("./data_.js")
-const Ticket = require("./data_ticket.js")
+const Signin = require("./models/data_user.js")
+const Booking = require("./models/data_.js")
+const Ticket = require("./models/data_ticket.js")
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -29,48 +30,48 @@ app.get("/index", (req, res) => {
     res.render("index");
 });
 
-const middle= async (req,res,next)=>{
+const middle = async (req, res, next) => {
     try {
         console.log(req.cookies.trakev)
         const ver = jwt.verify(req.cookies.trakev, "himanshukumarguptaiswritingthiscodeforjwt")
-    usr = await Signin.findOne({ email: ver.email })
-    const list = await Signin.find({ dvr_stu: "driver" });
-    console.log("hel")
-    let str = []
-    let ev = []
-    for (let i = 0; i < list.length; i++) {
-        if (list[i].ev_name != undefined)
-            str[i] = list[i].ev_name + ":" + list[i].status + ' at ' + list[i].time
-        ev[i] = list[i].ev_name
-    }
-    console.log("hel")
-    len = usr.tokens.length
-    l = 0
-    for (let i = 0; i < len; i++) {
-        if (usr.tokens[i - l].token == req.cookies.trakev) {
-            console.log(usr.tokens[i - l])
-            usr.tokens.splice(i - l, 1)
-            await usr.save()
-            l += 1
+        usr = await Signin.findOne({ email: ver.email })
+        const list = await Signin.find({ dvr_stu: "driver" });
+        console.log("hel")
+        let str = []
+        let ev = []
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].ev_name != undefined)
+                str[i] = list[i].ev_name + ":" + list[i].status + ' at ' + list[i].time
+            ev[i] = list[i].ev_name
         }
-    }
-    req.str=str
-    req.usr=usr
-    req.ev=ev
-    console.log("hel")
-    res.render("student",{ name: req.usr.name,str: req.str, ev: req.ev } );
-    next();
+        console.log("hel")
+        len = usr.tokens.length
+        l = 0
+        for (let i = 0; i < len; i++) {
+            if (usr.tokens[i - l].token == req.cookies.trakev) {
+                console.log(usr.tokens[i - l])
+                usr.tokens.splice(i - l, 1)
+                await usr.save()
+                l += 1
+            }
+        }
+        req.str = str
+        req.usr = usr
+        req.ev = ev
+        console.log("hel")
+        res.render("student", { name: req.usr.name, str: req.str, ev: req.ev });
+        next();
 
     } catch (error) {
         res.render("index")
     }
 
-    }
+}
 
 
-app.get("/", middle,async (req, res) => {
+app.get("/", middle, async (req, res) => {
     console.log("hel")
-    
+
 
 
 })
@@ -80,6 +81,9 @@ app.get("/driver.hbs", (req, res) => {
 });
 app.get("/signup.hbs", (req, res) => {
     res.render("signup");
+});
+app.get("/otpvalidation.hbs", (req, res) => {
+    res.render("otpvalidation");
 });
 
 app.get("/logout.hbs", async (req, res) => {
@@ -105,9 +109,9 @@ app.get("/logout.hbs", async (req, res) => {
 })
 app.get("/logout_all.hbs", async (req, res) => {
     const ver = jwt.verify(req.cookies.trakev, "himanshukumarguptaiswritingthiscodeforjwt")
-    usr = await Signin.updateOne({ email: ver.email },{
-        $unset:{
-            tokens:[]
+    usr = await Signin.updateOne({ email: ver.email }, {
+        $unset: {
+            tokens: []
         }
     })
     // const hello=await Signin.updateOne({})
@@ -115,6 +119,51 @@ app.get("/logout_all.hbs", async (req, res) => {
 // app.get("/booking.hbs", (req, res) => {
 //     res.render("booking");
 // });
+
+function generateOTP() {
+
+    // Declare a digits variable 
+    // which stores all digits
+    var digits = '0123456789';
+    let OTP = '';
+    for (let i = 0; i < 6; i++) {
+        OTP += digits[Math.floor(Math.random() * 10)];
+    }
+    return OTP;
+}
+
+
+// app.post("/otpvalidation",
+//     async (req, res) => {
+//         console.log("fdjfnsj")
+//         if (req.body.otp == global.otp) {
+//             const signindata = new Signin({
+//                 dvr_stu: req.body.dvr_stu,
+//                 name: req.body.name,
+//                 email: req.body.email,
+//                 mobno: req.body.mobno,
+//                 pw: pw,
+//             })
+
+//             // console.log("hel")
+
+//             const token = await signindata.tokencreation();
+//             // console.log(token)
+//             res.cookie("trakev", token, {
+//                 expires: new Date(Date.now() + 120000),
+//                 httpOnly: true
+//             })
+
+//             signuped = await signindata.save()
+
+
+
+//             // console.log("hello")
+
+
+//             res.status(201).render("index");
+//         }
+//     })
 
 app.post("/signup", async (req, res) => {
     try {
@@ -125,23 +174,54 @@ app.post("/signup", async (req, res) => {
 
 
 
-
-        // const hell=async(token)=>{
-        //     Signin.updateOne({email:req.body.email},{
-        //         $set:{
-        //             tokens:tokens.concat({token:await token})
-        //         }
-
-        //     })
-        //     }
-
-
-
-        // const verify=await jwt.verify(token,"himanshukumarguptaiswritingthiscodeforjwt");
-
-        // 
-
         if (pw === re_pw) {
+
+
+
+            // global.otp = generateOTP()
+
+            // console.log(otp)
+
+
+            // const mail_id = {
+            //     email: "utkarshpandey1104@gmail.com",
+            //     password: "mkbvdfjlnpzxvuhb"
+            // }
+            // console.log("ge")
+            // var transporter = mailer.createTransport({
+            //     service: 'gmail',
+            //     // secure: true,
+            //     auth: {
+            //         user: mail_id.email,
+            //         pass: mail_id.password
+            //     }
+            // });
+            // console.log("ge")
+            // var mailOptions = {
+            //     from: mail_id.email,
+            //     to: req.body.email,
+            //     subject: 'OTP validation for Trakev',
+            //     text: global.otp
+            // };
+            // console.log("ge")
+
+            // transporter.sendMail(mailOptions, function (error, info) {
+            //     if (error) {
+            //         console.log(error);
+            //     } else {
+            //         console.log('Email sent: ' + info.response);
+            //     }
+            // });
+            // console.log("hellifs")
+
+            // res.render("otpvalidation")
+
+
+
+            
+
+
+
             const signindata = new Signin({
                 dvr_stu: req.body.dvr_stu,
                 name: req.body.name,
@@ -262,7 +342,7 @@ app.post("/signin", async (req, res) => {
 
                 // middle()
 
-                res.status(201).render("student",{ name: global.name, str: str, ev: ev })
+                res.status(201).render("student", { name: global.name, str: str, ev: ev })
             }
             else if (dvr_stu === "driver") {
                 console.log("hell")
